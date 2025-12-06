@@ -1,0 +1,7 @@
+{
+  "name": "AssetGuard AI",
+  "description": "智能資產盤點系統，整合 Gemini AI 影像辨識、資產管理與 PDF 匯出功能。",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
