@@ -71,9 +71,26 @@
                     <span class="w-6 h-6 mr-2 text-blue-600">📋</span>
                     資產盤點目錄
                 </h1>
-                <button @click="view = 'SETTINGS'" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
-                    <span class="w-6 h-6">⚙</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <!-- 匯入 JSON 為新目錄 -->
+                    <button
+                        @click="$refs.categoryImportInput.click()"
+                        class="p-2 text-gray-600 hover:bg-gray-100 rounded-full text-xs"
+                        title="從 JSON 匯入為新目錄">
+                        ⬆JSON
+                    </button>
+                    <input
+                        type="file"
+                        ref="categoryImportInput"
+                        class="hidden"
+                        accept="application/json"
+                        @change="importCategoryData">
+
+                    <!-- 設定 -->
+                    <button @click="view = 'SETTINGS'" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
+                        <span class="w-6 h-6">⚙</span>
+                    </button>
+                </div>
             </header>
 
             <main class="flex-1 overflow-y-auto p-4 pb-20">
@@ -91,6 +108,13 @@
                             </div>
                         </div>
                         <div class="flex items-center">
+                            <!-- 匯出這個目錄 + 底下所有資產 -->
+                            <button
+                                @click.stop="exportCategoryData(cat)"
+                                class="mr-2 p-2 text-gray-500 hover:bg-gray-100 rounded-full text-xs"
+                                title="匯出此目錄與所有資產 (JSON)">
+                                ⬇JSON
+                            </button>
                             <button @click.stop="deleteCategory(cat.id)" class="mr-3 p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full">
                                 <span class="text-lg leading-none">🗑</span>
                             </button>
@@ -696,6 +720,88 @@
                     if (this.settingsTab === 'locations') this.settings.savedLocations.splice(idx, 1);
                     if (this.settingsTab === 'prefixes') this.settings.savedPrefixes.splice(idx, 1);
                     this.saveSettings();
+                },
+
+                // 專案目錄匯出 / 匯入
+                async exportCategoryData(categoryArg) {
+                    const category = categoryArg || this.activeCategory;
+                    if (!category) {
+                        alert('請先選擇要匯出的目錄');
+                        return;
+                    }
+                    try {
+                        const assets = await db.getByIndex('assets', 'categoryId', category.id);
+                        const payload = {
+                            type: 'AssetGuardCategoryExport',
+                            version: 1,
+                            exportedAt: Date.now(),
+                            category,
+                            assets
+                        };
+                        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        const safeName = (category.name || 'category').replace(/[\\/:*?"<>|]/g, '_');
+                        a.href = url;
+                        a.download = `${safeName}-asset-export.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    } catch (e) {
+                        console.error(e);
+                        alert('匯出失敗，請稍後再試');
+                    }
+                },
+
+                async importCategoryData(event) {
+                    const file = event.target.files[0];
+                    // 重置 input，避免同一檔案連續選擇時無法觸發 change
+                    event.target.value = '';
+                    if (!file) return;
+
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
+
+                        if (!data || data.type !== 'AssetGuardCategoryExport') {
+                            alert('匯入檔案格式不正確，請確認是匯出產生的 JSON 檔');
+                            return;
+                        }
+
+                        const originalCategory = data.category || {};
+                        const originalAssets = Array.isArray(data.assets) ? data.assets : [];
+
+                        // 建立新的目錄 id，避免與現有資料衝突
+                        const newCategoryId = crypto.randomUUID();
+                        const newCategory = {
+                            id: newCategoryId,
+                            name: originalCategory.name || `匯入目錄 (${new Date().toLocaleString('zh-TW')})`,
+                            description: originalCategory.description || ''
+                        };
+
+                        await db.save('categories', newCategory);
+
+                        // 將資產逐筆匯入並改成新的 categoryId / id
+                        for (const asset of originalAssets) {
+                            const newAsset = {
+                                ...asset,
+                                id: crypto.randomUUID(),
+                                categoryId: newCategoryId,
+                                updatedAt: Date.now()
+                            };
+                            await db.save('assets', newAsset);
+                        }
+
+                        // 重新載入並直接進入新目錄
+                        await this.loadCategories();
+                        await this.enterCategory(newCategory);
+
+                        alert(`已匯入目錄「${newCategory.name}」，共 ${originalAssets.length} 筆資產`);
+                    } catch (e) {
+                        console.error(e);
+                        alert('匯入失敗，請確認檔案為正確的 JSON 匯出檔');
+                    }
                 },
 
                 // PDF
