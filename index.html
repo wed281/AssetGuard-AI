@@ -67,10 +67,63 @@
                     <i data-lucide="list" class="w-6 h-6 mr-2 text-blue-600"></i>
                     資產盤點目錄
                 </h1>
-                <button @click="view = 'SETTINGS'" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
-                    <i data-lucide="settings" class="w-6 h-6"></i>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button @click="openExportModal"
+                            class="px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 text-gray-600 hover:bg-gray-50">
+                        匯出
+                    </button>
+                    <label class="px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 text-gray-600 hover:bg-gray-50 cursor-pointer">
+                        匯入
+                        <input type="file" accept="application/json" class="hidden" @change="importBundle">
+                    </label>
+                    <button @click="view = 'SETTINGS'" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
+                        <i data-lucide="settings" class="w-6 h-6"></i>
+                    </button>
+                </div>
             </header>
+
+            <!-- 匯出目錄選擇 Modal -->
+            <div v-if="showExportModal" class="fixed inset-0 bg-black/40 flex items-center justify-center z-30">
+                <div class="bg-white rounded-2xl w-[90%] max-w-md p-4 max-h-[80vh] overflow-y-auto">
+                    <h2 class="text-base font-semibold mb-1">選擇要匯出的目錄</h2>
+                    <p class="text-xs text-gray-500 mb-3">
+                        勾選要匯出的目錄。匯出檔案會包含所選目錄及其底下所有資產資料與照片。
+                    </p>
+
+                    <div v-if="categories.length === 0" class="text-sm text-gray-500 py-4 text-center">
+                        目前尚未建立任何目錄，無法匯出。
+                    </div>
+                    <div v-else class="space-y-2 max-h-[50vh] overflow-y-auto">
+                        <label v-for="cat in categories" :key="cat.id"
+                               class="flex items-center justify-between px-3 py-2 rounded-xl border border-gray-200">
+                            <div class="mr-3">
+                                <p class="text-sm font-medium text-gray-800">{{ cat.name }}</p>
+                                <p class="text-xs text-gray-500">{{ cat.description || ' ' }}</p>
+                            </div>
+                            <input type="checkbox" class="w-4 h-4"
+                                   :value="cat.id"
+                                   v-model="exportSelection">
+                        </label>
+                    </div>
+
+                    <div class="flex justify-between items-center mt-4">
+                        <button @click="toggleExportSelectAll"
+                                class="text-xs text-gray-600 underline">
+                            全選 / 全不選
+                        </button>
+                        <div class="space-x-2">
+                            <button @click="closeExportModal"
+                                    class="px-3 py-1.5 rounded-full text-xs border border-gray-200 text-gray-600">
+                                取消
+                            </button>
+                            <button @click="confirmExportSelection"
+                                    class="px-4 py-1.5 rounded-full text-xs font-semibold bg-blue-600 text-white">
+                                匯出
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <main class="flex-1 overflow-y-auto p-4 pb-20">
                 <div class="grid grid-cols-1 gap-4">
@@ -87,8 +140,8 @@
                             </div>
                         </div>
                         <div class="flex items-center">
-                            <button @click.stop="deleteCategory(cat.id)" class="mr-3 p-2 text-gray-300 hover:text-red-500">
-                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            <button @click.stop="deleteCategory(cat.id)" class="mr-3 p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
                             </button>
                             <i data-lucide="chevron-right" class="text-gray-400 w-5 h-5"></i>
                         </div>
@@ -172,7 +225,7 @@
                             <div v-if="asset.note" class="w-2 h-2 bg-orange-500 rounded-full mb-2 mr-2"></div>
                         </div>
 
-                        <button @click.stop="deleteAsset(asset.id)" class="absolute bottom-2 right-2 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded">
+                        <button @click.stop="deleteAsset(asset.id)" class="absolute bottom-2 right-2 p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full">
                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -335,15 +388,15 @@
         <transition name="fade">
             <div v-if="lightbox.isOpen" @click="closeLightbox" class="fixed inset-0 bg-black z-[999] flex items-center justify-center">
                 <button @click="closeLightbox" class="absolute top-4 right-4 text-white p-2 bg-white/20 rounded-full z-20">
-                    <i data-lucide="x" class="w-8 h-8"></i>
+                    <span class="text-3xl leading-none">✕</span>
                 </button>
                 
                 <!-- Nav -->
                 <button v-if="lightbox.images.length > 1" @click.stop="prevImage" class="absolute left-4 top-1/2 -translate-y-1/2 text-white p-3 bg-white/20 rounded-full z-20">
-                    <i data-lucide="chevron-left" class="w-8 h-8"></i>
+                    <span class="text-3xl leading-none">‹</span>
                 </button>
                 <button v-if="lightbox.images.length > 1" @click.stop="nextImage" class="absolute right-4 top-1/2 -translate-y-1/2 text-white p-3 bg-white/20 rounded-full z-20">
-                    <i data-lucide="chevron-right" class="w-8 h-8"></i>
+                    <span class="text-3xl leading-none">›</span>
                 </button>
 
                 <!-- Counter -->
@@ -449,10 +502,18 @@
                 });
             }
             save(storeName, item) {
-                return new Promise(resolve => {
-                    const tx = this.db.transaction(storeName, 'readwrite');
-                    tx.objectStore(storeName).put(item);
-                    tx.oncomplete = () => resolve();
+                return new Promise((resolve, reject) => {
+                    try {
+                        // 確保寫入 IndexedDB 的是「一般物件」，而不是 Vue 的 Proxy / reactive 物件
+                        const plain = JSON.parse(JSON.stringify(item));
+                        const tx = this.db.transaction(storeName, 'readwrite');
+                        tx.objectStore(storeName).put(plain);
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = (e) => reject(e.target.error || e);
+                    } catch (e) {
+                        console.error('儲存到 IndexedDB 失敗，無法序列化資料:', e, item);
+                        reject(e);
+                    }
                 });
             }
             delete(storeName, id) {
@@ -485,6 +546,9 @@
                     categories: [],
                     assets: [],
                     activeCategory: null,
+                    // 匯出 / 匯入相關狀態
+                    showExportModal: false,
+                    exportSelection: [],
                     settings: {
                         savedNames: ['筆記型電腦', '顯示器', '辦公桌'],
                         savedLocations: ['會議室 A', '庫房', '主要辦公區'],
@@ -567,6 +631,139 @@
                     await db.delete('categories', id);
                     this.loadCategories();
                 },
+                // 匯出 / 匯入目錄與資產
+                openExportModal() {
+                    if (!this.categories || !this.categories.length) {
+                        alert('目前沒有目錄可以匯出');
+                        return;
+                    }
+                    this.exportSelection = this.categories.map(c => c.id);
+                    this.showExportModal = true;
+                },
+                closeExportModal() {
+                    this.showExportModal = false;
+                },
+                toggleExportSelectAll() {
+                    if (!this.categories || !this.categories.length) return;
+                    if (this.exportSelection.length === this.categories.length) {
+                        this.exportSelection = [];
+                    } else {
+                        this.exportSelection = this.categories.map(c => c.id);
+                    }
+                },
+                async confirmExportSelection() {
+                    if (!this.exportSelection || !this.exportSelection.length) {
+                        alert('請先勾選要匯出的目錄');
+                        return;
+                    }
+                    await this.exportSelectedBundle();
+                    this.showExportModal = false;
+                },
+                async exportSelectedBundle() {
+                    const selectedIds = Array.from(new Set(this.exportSelection || []));
+                    if (!selectedIds.length) return;
+                    const idSet = new Set(selectedIds);
+                    const categories = this.categories.filter(c => idSet.has(c.id)).map(c => ({
+                        id: c.id,
+                        name: c.name,
+                        description: c.description || ''
+                    }));
+                    // 讀取所有被選目錄的資產
+                    const assets = [];
+                    for (const cid of selectedIds) {
+                        const list = await db.getByIndex('assets', 'categoryId', cid);
+                        if (Array.isArray(list)) {
+                            list.forEach(a => assets.push(a));
+                        }
+                    }
+                    if (!categories.length) {
+                        alert('沒有可匯出的目錄');
+                        return;
+                    }
+                    const payload = {
+                        type: 'assetguard_bundle',
+                        version: 1,
+                        exportedAt: new Date().toISOString(),
+                        categories,
+                        assets
+                    };
+                    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const dateStr = new Date().toISOString().slice(0,10).replace(/-/g,'');
+                    a.download = `AssetGuard_Bundle_${dateStr}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                },
+                importBundle(event) {
+                    const file = event.target.files && event.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        try {
+                            const text = e.target.result;
+                            const data = JSON.parse(text);
+                            const catList = Array.isArray(data.categories) ? data.categories : (Array.isArray(data) ? data : []);
+                            const assetList = Array.isArray(data.assets) ? data.assets : [];
+                            if (!Array.isArray(catList) || !catList.length) {
+                                alert('匯入檔案格式不正確或沒有目錄資料');
+                                return;
+                            }
+                            // 重新讀取目前目錄，避免舊資料
+                            await this.loadCategories();
+                            const genId = () => {
+                                if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                                    return window.crypto.randomUUID();
+                                }
+                                return Date.now().toString(36) + '-' + Math.random().toString(16).slice(2);
+                            };
+                            const nameToCat = {};
+                            this.categories.forEach(c => { nameToCat[c.name] = c; });
+                            const idMap = {}; // 舊 categoryId -> 新 categoryId
+                            // 匯入目錄
+                            for (const item of catList) {
+                                const name = (item.name || '').trim();
+                                if (!name) continue;
+                                if (nameToCat[name]) {
+                                    // 已存在，沿用現有 id
+                                    idMap[item.id] = nameToCat[name].id;
+                                    continue;
+                                }
+                                const cat = {
+                                    id: genId(),
+                                    name,
+                                    description: item.description || ''
+                                };
+                                await db.save('categories', cat);
+                                this.categories.push(cat);
+                                nameToCat[name] = cat;
+                                idMap[item.id] = cat.id;
+                            }
+                            // 匯入資產
+                            for (const a of assetList) {
+                                const oldCid = a.categoryId;
+                                const newCid = idMap[oldCid];
+                                if (!newCid) continue;
+                                const asset = Object.assign({}, a);
+                                asset.id = genId();
+                                asset.categoryId = newCid;
+                                if (!asset.createdAt) asset.createdAt = new Date().toISOString();
+                                if (!asset.updatedAt) asset.updatedAt = asset.createdAt;
+                                await db.save('assets', asset);
+                            }
+                            alert('匯入完成');
+                        } catch (err) {
+                            console.error('匯入資料失敗', err);
+                            alert('匯入失敗，檔案格式可能不正確');
+                        } finally {
+                            event.target.value = '';
+                        }
+                    };
+                    reader.readAsText(file, 'utf-8');
+                },
                 async enterCategory(cat) {
                     this.activeCategory = cat;
                     this.assets = await db.getByIndex('assets', 'categoryId', cat.id);
@@ -599,9 +796,16 @@
                 },
                 async saveAsset() {
                     if (!this.formData.name) return alert('請輸入名稱');
+                    // 這裡避免舊版瀏覽器沒有 crypto.randomUUID() 造成錯誤
+                    const genId = () => {
+                        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+                            return window.crypto.randomUUID();
+                        }
+                        return Date.now().toString(36) + '-' + Math.random().toString(16).slice(2);
+                    };
                     const asset = {
                         ...this.formData,
-                        id: this.editingAssetId || crypto.randomUUID(),
+                        id: this.editingAssetId || genId(),
                         updatedAt: Date.now()
                     };
                     await db.save('assets', asset);
@@ -687,35 +891,121 @@
                     this.saveSettings();
                 },
 
-                // PDF
+                // PDF：使用 html2pdf，在 Vue 之外建立獨立 DOM，再匯出（不修改任何 Vue 狀態）
                 generatePDF() {
-                    if (!this.activeCategory) return;
-                    this.isPdfPreview = true;
-                    this.isPdfGenerating = true;
-                    
-                    // Wait for DOM
-                    setTimeout(() => {
-                        const element = document.getElementById('pdf-report-content');
-                        if (!element) return;
-                        
+                    const category = this.activeCategory;
+                    if (!category) {
+                        alert('請先選擇目錄');
+                        return;
+                    }
+                    const rows = this.filteredAssets || [];
+                    if (!rows.length) {
+                        alert('此目錄尚無任何資產，無法匯出');
+                        return;
+                    }
+
+                    try {
+                        // 建立一個獨立容器，不在 #app 裡，避免影響 Vue DOM
+                        const wrapper = document.createElement('div');
+                        wrapper.style.width = '210mm';
+                        wrapper.style.padding = '15mm 10mm';
+                        wrapper.style.boxSizing = 'border-box';
+                        wrapper.style.backgroundColor = '#ffffff';
+                        wrapper.style.color = '#111827';
+                        wrapper.style.fontFamily = '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif';
+                        wrapper.style.fontSize = '11px';
+
+                        const esc = (v) => (v == null ? '' : String(v))
+                            .replace(/&/g, '&amp;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;');
+
+                        let html = '';
+                        html += '<div style="font-size:18px;font-weight:700;margin:0 0 4px 0;">資產盤點清單</div>';
+                        html += '<div style="margin:0 0 2px 0;font-size:11px;">分類目錄：' + esc(category.name || '') + '</div>';
+
+                        const now = new Date();
+                        const ts = now.getFullYear() + '/' +
+                                   String(now.getMonth() + 1).padStart(2,'0') + '/' +
+                                   String(now.getDate()).padStart(2,'0') + ' ' +
+                                   String(now.getHours()).padStart(2,'0') + ':' +
+                                   String(now.getMinutes()).padStart(2,'0');
+                        html += '<div style="margin:0 0 8px 0;font-size:10px;color:#6b7280;">匯出日期：' + ts + '</div>';
+
+                        // 表格外框
+                        html += '<table style="width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed;">';
+                        html += '<thead><tr style="background:#e5e7eb;">'
+                             + '<th style="border:1px solid #9ca3af;padding:4px;width:5%;">#</th>'
+                             + '<th style="border:1px solid #9ca3af;padding:4px;width:30%;">照片記錄</th>'
+                             + '<th style="border:1px solid #9ca3af;padding:4px;width:30%;">資產詳細資訊</th>'
+                             + '<th style="border:1px solid #9ca3af;padding:4px;width:15%;">位置</th>'
+                             + '<th style="border:1px solid #9ca3af;padding:4px;width:20%;">備註</th>'
+                             + '</tr></thead><tbody>';
+
+                        rows.forEach((a, idx) => {
+                            const sn = esc(a.serialNumber || a.serial || 'N/A');
+                            const code = esc(a.assetId || a.code || '');
+                            const name = esc(a.name || '');
+                            const loc = esc(a.location || '');
+                            const note = esc(a.note || a.remark || '');
+
+                            // 照片欄：多張照片垂直排列
+                            let photosHtml = '';
+                            if (Array.isArray(a.photos) && a.photos.length) {
+                                a.photos.forEach((src) => {
+                                    if (!src) return;
+                                    photosHtml += '<div style="margin-bottom:4px;border:1px solid #e5e7eb;">'
+                                                + '<img src="' + src + '" style="width:60mm;max-height:35mm;object-fit:contain;display:block;" />'
+                                                + '</div>';
+                                });
+                            }
+
+                            // 詳細資訊欄
+                            let detailHtml = '';
+                            detailHtml += '編號：' + code + '<br>';
+                            detailHtml += 'S/N：' + sn + '<br>';
+                            detailHtml += '名稱：' + name;
+
+                            html += '<tr style="page-break-inside: avoid;">'
+                                 + '<td style="border:1px solid #d1d5db;padding:4px;vertical-align:top;text-align:center;">' + (idx + 1) + '</td>'
+                                 + '<td style="border:1px solid #d1d5db;padding:4px;vertical-align:top;">' + photosHtml + '</td>'
+                                 + '<td style="border:1px solid #d1d5db;padding:4px;vertical-align:top;">' + detailHtml + '</td>'
+                                 + '<td style="border:1px solid #d1d5db;padding:4px;vertical-align:top;">' + loc + '</td>'
+                                 + '<td style="border:1px solid #d1d5db;padding:4px;vertical-align:top;">' + note + '</td>'
+                                 + '</tr>';
+                        });
+
+                        html += '</tbody></table>';
+
+                        // 頁尾
+                        html += '<div style="margin-top:8px;font-size:9px;color:#6b7280;display:flex;justify-content:space-between;">'
+                             + '<span>Generated by AssetGuard</span>'
+                             + '<span>本頁共計：' + rows.length + ' 筆資產</span>'
+                             + '</div>';
+
+                        wrapper.innerHTML = html;
+                        document.body.appendChild(wrapper);
+
                         const opt = {
                             margin: 0,
-                            filename: `${this.activeCategory.name}_AssetReport.pdf`,
+                            filename: (category.name || 'AssetReport') + '_AssetReport.pdf',
                             image: { type: 'jpeg', quality: 0.98 },
                             html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
                             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                         };
-                        
-                        // @ts-ignore
-                        html2pdf().set(opt).from(element).save().then(() => {
-                            this.isPdfPreview = false;
-                            this.isPdfGenerating = false;
+
+                        // 直接用 html2pdf 以 wrapper 為來源產生 PDF
+                        html2pdf().set(opt).from(wrapper).save().then(() => {
+                            document.body.removeChild(wrapper);
                         }).catch(e => {
+                            console.error('匯出失敗', e);
+                            document.body.removeChild(wrapper);
                             alert('匯出失敗');
-                            this.isPdfPreview = false;
-                            this.isPdfGenerating = false;
                         });
-                    }, 800);
+                    } catch (e) {
+                        console.error('匯出 PDF 發生錯誤', e);
+                        alert('匯出失敗');
+                    }
                 }
             }
         }).mount('#app');
