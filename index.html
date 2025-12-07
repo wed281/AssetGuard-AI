@@ -13,15 +13,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Import Map for Google GenAI SDK -->
-    <script type="importmap">
-    {
-      "imports": {
-        "@google/genai": "https://esm.run/@google/genai"
-      }
-    }
-    </script>
-
-    <style>
+        <style>
         body {
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
@@ -61,7 +53,6 @@
             100% { transform: rotate(360deg); }
         }
     </style>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-gray-50 text-gray-900 h-screen overflow-hidden selection:bg-blue-100">
 
@@ -232,7 +223,7 @@
                             :class="isAnalyzing ? 'bg-purple-100 text-purple-400' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200'">
                         <div v-if="isAnalyzing" class="loader mr-2"></div>
                         <i v-else data-lucide="sparkles" class="w-5 h-5 mr-2"></i>
-                        {{ isAnalyzing ? 'AI 分析中...' : '使用 Gemini AI 自動辨識' }}
+                        {{ isAnalyzing ? 'AI 分析中...' : '以照片資訊快速帶入（目前需手動填寫）' }}
                     </button>
                 </div>
 
@@ -423,9 +414,9 @@
 
     <!-- Application Logic -->
     <script type="module">
-        import { GoogleGenAI, Type } from "@google/genai";
         const { createApp } = Vue;
 
+        
         // --- Database Service ---
         const DB_NAME = 'AssetGuardDB';
         const DB_VERSION = 1;
@@ -483,49 +474,8 @@
         const db = new DBService();
 
         // --- Gemini Service ---
-        class GeminiService {
-            constructor() { 
-                // Using process.env.API_KEY if available in bundler, but for single file user must input logic or use env
-                // Since this is a generated file, we assume the environment injects the key or user provides it.
-                // For the prompt, I will use process.env.API_KEY as per instructions.
-                // Note: In a real browser file without build process, process.env isn't there. 
-                // However, the prompt says "The API key must be obtained exclusively from process.env.API_KEY".
-                // I will adhere to that, assuming the runtime environment (like the previewer) handles it.
-                this.apiKey = process.env.API_KEY; 
-                this.ai = new GoogleGenAI({ apiKey: this.apiKey });
-            }
-            async analyze(base64Data) {
-                try {
-                    const data = base64Data.split(',')[1] || base64Data;
-                    const response = await this.ai.models.generateContent({
-                        model: 'gemini-3-pro-preview',
-                        contents: {
-                            parts: [
-                                { inlineData: { mimeType: 'image/jpeg', data: data } },
-                                { text: `Analyze this asset image. Return JSON with: name, serialNumber, assetId, location (e.g. 'Office Desk').` }
-                            ]
-                        },
-                        config: {
-                            responseMimeType: "application/json",
-                            responseSchema: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    name: { type: Type.STRING },
-                                    serialNumber: { type: Type.STRING },
-                                    assetId: { type: Type.STRING },
-                                    location: { type: Type.STRING },
-                                }
-                            }
-                        }
-                    });
-                    return JSON.parse(response.text);
-                } catch (e) {
-                    console.error("Gemini Error", e);
-                    throw e;
-                }
-            }
-        }
-        const ai = new GeminiService();
+        
+        // （已移除 Gemini 相關程式碼）
 
         // --- Vue App ---
         createApp({
@@ -693,18 +643,7 @@
                     this.formData.photos.splice(idx, 1);
                 },
                 async analyzeImage() {
-                    if (this.formData.photos.length === 0) return alert('請先上傳照片');
-                    this.isAnalyzing = true;
-                    try {
-                        const result = await ai.analyze(this.formData.photos[this.formData.photos.length - 1]);
-                        if (result.name) this.formData.name = result.name;
-                        if (result.serialNumber) this.formData.serialNumber = result.serialNumber;
-                        if (result.assetId) this.formData.assetId = result.assetId;
-                        if (result.location) this.formData.location = result.location;
-                    } catch (e) {
-                        alert('分析失敗');
-                    }
-                    this.isAnalyzing = false;
+                    alert('目前未啟用自動分析功能，請自行填寫欄位');
                 },
 
                 // Lightbox
@@ -781,6 +720,5 @@
             }
         }).mount('#app');
     </script>
-<script type="module" src="/index.tsx"></script>
 </body>
 </html>
