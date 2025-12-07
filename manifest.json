@@ -1,6 +1,6 @@
 {
   "name": "AssetGuard 資產盤點",
-  "short_name": "AssetGuard",
+  "short_name": "AssetGuard 資產盤點",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
