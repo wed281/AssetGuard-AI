@@ -6,6 +6,7 @@
     <title>AssetGuard AI 盤點系統</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
+    <!-- iOS PWA full-screen -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="AssetGuard">
@@ -15,19 +16,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-
     <!-- Import Map for Google GenAI SDK -->
-    <script type="importmap">
-    {
-      "imports": {
-        "@google/genai": "https://esm.run/@google/genai"
-      }
-    }
-    </script>
-
-    <style>
+        <style>
         body {
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
@@ -67,7 +57,6 @@
             100% { transform: rotate(360deg); }
         }
     </style>
-<link rel="stylesheet" href="/index.css">
 </head>
 <body class="bg-gray-50 text-gray-900 h-screen overflow-hidden selection:bg-blue-100">
 
@@ -79,11 +68,11 @@
         <div v-if="view === 'CATEGORIES'" class="h-full flex flex-col">
             <header class="bg-white px-4 py-4 flex justify-between items-center shadow-sm sticky top-0 z-10">
                 <h1 class="text-xl font-extrabold text-blue-900 flex items-center">
-                    <i data-lucide="list" class="w-6 h-6 mr-2 text-blue-600"></i>
+                    <span class="w-6 h-6 mr-2 text-blue-600">📋</span>
                     資產盤點目錄
                 </h1>
                 <button @click="view = 'SETTINGS'" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full">
-                    <i data-lucide="settings" class="w-6 h-6"></i>
+                    <span class="w-6 h-6">⚙</span>
                 </button>
             </header>
 
@@ -94,7 +83,7 @@
                          class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer">
                         <div class="flex items-center">
                             <div class="bg-blue-100 p-3 rounded-lg mr-4 text-blue-600">
-                                <i data-lucide="folder-plus" class="w-6 h-6"></i>
+                                <span class="w-6 h-6">📁</span>
                             </div>
                             <div>
                                 <h3 class="text-lg font-bold text-gray-800">{{ cat.name }}</h3>
@@ -102,15 +91,15 @@
                             </div>
                         </div>
                         <div class="flex items-center">
-                            <button @click.stop="deleteCategory(cat.id)" class="mr-3 p-2 text-gray-300 hover:text-red-500">
-                                <span class="text-red-500 text-lg leading-none">🗑</span>
+                            <button @click.stop="deleteCategory(cat.id)" class="mr-3 p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full">
+                                <span class="text-lg leading-none">🗑</span>
                             </button>
-                            <i data-lucide="chevron-right" class="text-gray-400 w-5 h-5"></i>
+                            <span class="text-gray-400 w-5 h-5">›</span>
                         </div>
                     </div>
 
                     <button @click="showCategoryModal = true" class="border-2 border-dashed border-gray-300 p-4 rounded-xl flex flex-col items-center justify-center text-gray-400 hover:border-blue-500 hover:text-blue-500 transition-colors">
-                        <i data-lucide="plus" class="w-8 h-8 mb-2"></i>
+                        <span class="w-8 h-8 mb-2 text-2xl leading-none">＋</span>
                         <span class="font-medium">新增目錄 / 盤點專案</span>
                     </button>
                 </div>
@@ -123,17 +112,17 @@
                 <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
                     <div class="flex items-center">
                         <button @click="view = 'CATEGORIES'" class="mr-2 -ml-2 p-2 rounded-full hover:bg-gray-100">
-                            <i data-lucide="chevron-left" class="w-6 h-6 text-gray-600"></i>
+                            <span class="w-6 h-6 text-gray-600">←</span>
                         </button>
                         <h1 class="text-lg font-bold text-gray-800 truncate max-w-[200px]">{{ activeCategory?.name }}</h1>
                     </div>
                     <div class="flex gap-2">
                         <button @click="generatePDF" :disabled="isPdfGenerating" class="p-2 text-blue-600 hover:bg-blue-50 rounded-full flex items-center gap-1">
                             <div v-if="isPdfGenerating" class="loader"></div>
-                            <i v-else data-lucide="download" class="w-5 h-5"></i>
+                            <span v-else class="w-5 h-5">⬇</span>
                         </button>
                         <button @click="openAddAsset" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium flex items-center shadow-md active:bg-blue-700">
-                            <i data-lucide="plus" class="w-4 h-4 mr-1"></i> 新增
+                            <span class="w-4 h-4 mr-1">＋</span> 新增
                         </button>
                     </div>
                 </div>
@@ -141,7 +130,7 @@
                 <!-- Search -->
                 <div class="px-4 py-2 bg-gray-50 border-b">
                     <div class="relative">
-                        <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
+                        <span class="absolute left-3 top-2.5 w-4 h-4 text-gray-400">🔍</span>
                         <input type="text" v-model="searchTerm" placeholder="搜尋編號、名稱或地點..." 
                                class="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
@@ -150,7 +139,7 @@
 
             <main class="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-100 pb-20">
                 <div v-if="filteredAssets.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-400">
-                    <i data-lucide="alert-circle" class="w-12 h-12 mb-3 opacity-20"></i>
+                    <span class="w-12 h-12 mb-3 opacity-20 text-3xl">!</span>
                     <p>此目錄尚無資產</p>
                 </div>
 
@@ -181,14 +170,13 @@
                         
                         <div class="flex items-end justify-between mt-2">
                             <div class="flex items-center text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded max-w-[70%]">
-                                <i data-lucide="map-pin" class="w-3 h-3 mr-1 flex-shrink-0"></i>
+                                <span class="w-3 h-3 mr-1 flex-shrink-0">📍</span>
                                 <span class="truncate">{{ asset.location || '未指定位置' }}</span>
                             </div>
-                            <div v-if="asset.note" class="w-2 h-2 bg-orange-500 rounded-full mb-2 mr-2"></div>
-                        </div>
+                            </div>
 
-                        <button @click.stop="deleteAsset(asset.id)" class="absolute bottom-2 right-2 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded">
-                            <span class="text-red-500 text-lg leading-none">🗑</span>
+                        <button @click.stop="deleteAsset(asset.id)" class="absolute bottom-2 right-2 p-1.5 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-full">
+                            <span class="text-lg leading-none">🗑</span>
                         </button>
                     </div>
                 </div>
@@ -200,12 +188,12 @@
             <header class="bg-white border-b px-4 py-3 flex items-center justify-between shadow-sm sticky top-0 z-20">
                 <div class="flex items-center">
                     <button @click="view = 'ASSET_LIST'" class="p-2 mr-2 -ml-2 rounded-full hover:bg-gray-100">
-                        <i data-lucide="arrow-left" class="w-6 h-6 text-gray-700"></i>
+                        <span class="w-6 h-6 text-gray-700">←</span>
                     </button>
                     <h1 class="text-xl font-bold text-gray-800">{{ editingAssetId ? '編輯資產' : '新增資產' }}</h1>
                 </div>
                 <button @click="saveAsset" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium flex items-center shadow-sm active:scale-95 transition-transform">
-                    <i data-lucide="save" class="w-4 h-4 mr-2"></i> 儲存
+                    <span class="w-4 h-4 mr-2">💾</span> 儲存
                 </button>
             </header>
 
@@ -218,14 +206,14 @@
                              class="relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-gray-200 shadow-sm group">
                             <img :src="photo" class="w-full h-full object-cover" @click="openLightbox(formData.photos, idx)">
                             <button @click.stop="removePhoto(idx)" class="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1">
-                                <i data-lucide="x" class="w-3 h-3"></i>
+                                <span class="w-3 h-3 text-xs leading-none">✕</span>
                             </button>
                         </div>
                         
                         <div v-if="formData.photos.length < 3" 
                              @click="$refs.fileInput.click()"
                              class="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg text-gray-400 hover:border-blue-500 hover:text-blue-500 bg-gray-50 flex-shrink-0 cursor-pointer">
-                            <i data-lucide="camera" class="w-8 h-8 mb-1"></i>
+                            <span class="w-8 h-8 mb-1 text-2xl leading-none">📷</span>
                             <span class="text-xs">拍照/上傳</span>
                         </div>
                         <input type="file" ref="fileInput" class="hidden" accept="image/*" multiple @change="handleImageUpload">
@@ -237,8 +225,8 @@
                             class="w-full py-3 rounded-lg flex items-center justify-center font-medium transition-colors border"
                             :class="isAnalyzing ? 'bg-purple-100 text-purple-400' : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-200'">
                         <div v-if="isAnalyzing" class="loader mr-2"></div>
-                        <i v-else data-lucide="sparkles" class="w-5 h-5 mr-2"></i>
-                        {{ isAnalyzing ? 'AI 分析中...' : '使用 Gemini AI 自動辨識' }}
+                        <span v-else class="w-5 h-5 mr-2">✨</span>
+                        {{ isAnalyzing ? 'AI 分析中...' : '以照片資訊快速帶入（目前需手動填寫）' }}
                     </button>
                 </div>
 
@@ -296,7 +284,7 @@
         <div v-if="view === 'SETTINGS'" class="h-full flex flex-col bg-white">
             <div class="bg-white border-b px-4 py-3 flex items-center shadow-sm sticky top-0 z-10">
                 <button @click="view = 'CATEGORIES'" class="p-2 mr-2 rounded-full hover:bg-gray-100">
-                    <i data-lucide="arrow-left" class="w-6 h-6 text-gray-700"></i>
+                    <span class="w-6 h-6 text-gray-700">←</span>
                 </button>
                 <h1 class="text-xl font-bold text-gray-800">資料庫設定</h1>
             </div>
@@ -315,7 +303,7 @@
                            :placeholder="settingsTabName"
                            class="flex-1 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
                     <button @click="addSettingItem" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700">
-                        <i data-lucide="plus" class="w-5 h-5"></i>
+                        <span class="w-5 h-5 text-lg leading-none">＋</span>
                     </button>
                 </div>
 
@@ -323,7 +311,7 @@
                     <div v-for="(item, idx) in currentSettingsList" :key="idx" class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border">
                         <span class="text-gray-800">{{ item }}</span>
                         <button @click="removeSettingItem(idx)" class="text-red-500 p-2 hover:bg-red-50 rounded-full">
-                            <span class="text-red-500 text-lg leading-none">🗑</span>
+                            <span class="text-lg leading-none">🗑</span>
                         </button>
                     </div>
                     <div v-if="currentSettingsList.length === 0" class="text-center text-gray-400 py-8">暫無資料</div>
@@ -350,15 +338,15 @@
         <transition name="fade">
             <div v-if="lightbox.isOpen" @click="closeLightbox" class="fixed inset-0 bg-black z-[999] flex items-center justify-center">
                 <button @click="closeLightbox" class="absolute top-4 right-4 text-white p-2 bg-white/20 rounded-full z-20">
-                    <i data-lucide="x" class="w-8 h-8"></i>
+                    <span class="text-3xl leading-none">✕</span>
                 </button>
                 
                 <!-- Nav -->
                 <button v-if="lightbox.images.length > 1" @click.stop="prevImage" class="absolute left-4 top-1/2 -translate-y-1/2 text-white p-3 bg-white/20 rounded-full z-20">
-                    <i data-lucide="chevron-left" class="w-8 h-8"></i>
+                    <span class="text-3xl leading-none">‹</span>
                 </button>
                 <button v-if="lightbox.images.length > 1" @click.stop="nextImage" class="absolute right-4 top-1/2 -translate-y-1/2 text-white p-3 bg-white/20 rounded-full z-20">
-                    <i data-lucide="chevron-right" class="w-8 h-8"></i>
+                    <span class="text-3xl leading-none">›</span>
                 </button>
 
                 <!-- Counter -->
@@ -429,9 +417,9 @@
 
     <!-- Application Logic -->
     <script type="module">
-        import { GoogleGenAI, Type } from "@google/genai";
         const { createApp } = Vue;
 
+        
         // --- Database Service ---
         const DB_NAME = 'AssetGuardDB';
         const DB_VERSION = 1;
@@ -464,10 +452,18 @@
                 });
             }
             save(storeName, item) {
-                return new Promise(resolve => {
-                    const tx = this.db.transaction(storeName, 'readwrite');
-                    tx.objectStore(storeName).put(item);
-                    tx.oncomplete = () => resolve();
+                return new Promise((resolve, reject) => {
+                    try {
+                        // Convert Vue reactive / Proxy objects into plain data
+                        const plain = JSON.parse(JSON.stringify(item));
+                        const tx = this.db.transaction(storeName, 'readwrite');
+                        tx.objectStore(storeName).put(plain);
+                        tx.oncomplete = () => resolve();
+                        tx.onerror = () => reject(tx.error);
+                    } catch (error) {
+                        console.error('DB save error', error, item);
+                        reject(error);
+                    }
                 });
             }
             delete(storeName, id) {
@@ -489,49 +485,8 @@
         const db = new DBService();
 
         // --- Gemini Service ---
-        class GeminiService {
-            constructor() { 
-                // Using process.env.API_KEY if available in bundler, but for single file user must input logic or use env
-                // Since this is a generated file, we assume the environment injects the key or user provides it.
-                // For the prompt, I will use process.env.API_KEY as per instructions.
-                // Note: In a real browser file without build process, process.env isn't there. 
-                // However, the prompt says "The API key must be obtained exclusively from process.env.API_KEY".
-                // I will adhere to that, assuming the runtime environment (like the previewer) handles it.
-                this.apiKey = process.env.API_KEY; 
-                this.ai = new GoogleGenAI({ apiKey: this.apiKey });
-            }
-            async analyze(base64Data) {
-                try {
-                    const data = base64Data.split(',')[1] || base64Data;
-                    const response = await this.ai.models.generateContent({
-                        model: 'gemini-3-pro-preview',
-                        contents: {
-                            parts: [
-                                { inlineData: { mimeType: 'image/jpeg', data: data } },
-                                { text: `Analyze this asset image. Return JSON with: name, serialNumber, assetId, location (e.g. 'Office Desk').` }
-                            ]
-                        },
-                        config: {
-                            responseMimeType: "application/json",
-                            responseSchema: {
-                                type: Type.OBJECT,
-                                properties: {
-                                    name: { type: Type.STRING },
-                                    serialNumber: { type: Type.STRING },
-                                    assetId: { type: Type.STRING },
-                                    location: { type: Type.STRING },
-                                }
-                            }
-                        }
-                    });
-                    return JSON.parse(response.text);
-                } catch (e) {
-                    console.error("Gemini Error", e);
-                    throw e;
-                }
-            }
-        }
-        const ai = new GeminiService();
+        
+        // （已移除 Gemini 相關程式碼）
 
         // --- Vue App ---
         createApp({
@@ -600,10 +555,10 @@
                 await db.connect();
                 this.loadCategories();
                 this.loadSettings();
-                this.$nextTick(() => lucide.createIcons());
+                // Icons removed: no external DOM manipulation needed
             },
             updated() {
-                this.$nextTick(() => lucide.createIcons());
+                // no-op
             },
             methods: {
                 // Categories
@@ -699,18 +654,7 @@
                     this.formData.photos.splice(idx, 1);
                 },
                 async analyzeImage() {
-                    if (this.formData.photos.length === 0) return alert('請先上傳照片');
-                    this.isAnalyzing = true;
-                    try {
-                        const result = await ai.analyze(this.formData.photos[this.formData.photos.length - 1]);
-                        if (result.name) this.formData.name = result.name;
-                        if (result.serialNumber) this.formData.serialNumber = result.serialNumber;
-                        if (result.assetId) this.formData.assetId = result.assetId;
-                        if (result.location) this.formData.location = result.location;
-                    } catch (e) {
-                        alert('分析失敗');
-                    }
-                    this.isAnalyzing = false;
+                    alert('目前未啟用自動分析功能，請自行填寫欄位');
                 },
 
                 // Lightbox
@@ -754,126 +698,136 @@
                     this.saveSettings();
                 },
 
-                // PDF：使用 html2pdf，在 Vue 之外建立獨立 DOM，再匯出（不修改任何 Vue 狀態）
-                generatePDF() {
+                // PDF
+                async generatePDF() {
+                    if (!this.activeCategory) {
+                        alert('請先選擇要匯出的目錄');
+                        return;
+                    }
+                    
                     const category = this.activeCategory;
-                    if (!category) {
-                        alert('請先選擇目錄');
+                    const assets = (this.filteredAssets && this.filteredAssets.length)
+                        ? this.filteredAssets
+                        : this.assets.filter(a => a.categoryId === category.id);
+                    
+                    if (!assets.length) {
+                        alert('此目錄目前沒有資產可匯出');
                         return;
                     }
-                    const rows = this.filteredAssets || [];
-                    if (!rows.length) {
-                        alert('此目錄尚無任何資產，無法匯出');
-                        return;
-                    }
-
+                    
+                    this.isPdfGenerating = true;
+                    
                     try {
-                        // 建立一個獨立容器，不在 #app 裡，避免影響 Vue DOM
+                        const escapeHtml = (value) => {
+                            if (value === null || value === undefined) return '';
+                            return String(value)
+                                .replace(/&/g, '&amp;')
+                                .replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;')
+                                .replace(/"/g, '&quot;')
+                                .replace(/'/g, '&#39;');
+                        };
+                        
+                        const rowsHtml = assets.map((asset, index) => {
+                            const photos = Array.isArray(asset.photos) ? asset.photos : [];
+                            const photoCells = photos.slice(0, 3).map(src => `
+                                    <div style="border-radius:4px; overflow:hidden; border:1px solid #e5e7eb; width:110px; height:82px; margin-right:4px;">
+                                        <img src="${escapeHtml(src)}" style="width:100%; height:100%; object-fit:cover;" />
+                                    </div>
+                                `).join('');
+                            
+                            return `
+                                <tr>
+                                    <td style="padding:6px 8px; border-bottom:1px solid #e5e7eb; text-align:center; font-size:11px;">${index + 1}</td>
+                                    <td style="padding:6px 8px; border-bottom:1px solid #e5e7eb; font-size:11px;">
+                                        <div style="display:flex; flex-direction:row; align-items:center;">${photoCells || '<span style="color:#9ca3af;">無照片</span>'}</div>
+                                    </td>
+                                    <td style="padding:6px 8px; border-bottom:1px solid #e5e7eb; font-size:11px;">
+                                        <div><strong>資產名稱：</strong>${escapeHtml(asset.name || '')}</div>
+                                        <div><strong>資產編號：</strong>${escapeHtml(asset.assetId || '')}</div>
+                                        <div><strong>序列號：</strong>${escapeHtml(asset.serialNumber || '')}</div>
+                                    </td>
+                                    <td style="padding:6px 8px; border-bottom:1px solid #e5e7eb; font-size:11px;">
+                                        ${escapeHtml(asset.location || '')}
+                                    </td>
+                                    <td style="padding:6px 8px; border-bottom:1px solid #e5e7eb; font-size:11px;">
+                                        ${escapeHtml(asset.note || '')}
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('');
+                        
                         const wrapper = document.createElement('div');
-                        wrapper.style.width = '210mm';
-                        wrapper.style.padding = '15mm 10mm';
-                        wrapper.style.boxSizing = 'border-box';
-                        wrapper.style.backgroundColor = '#ffffff';
-                        wrapper.style.color = '#111827';
-                        wrapper.style.fontFamily = '-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif';
-                        wrapper.style.fontSize = '11px';
-
-                        const esc = (v) => (v == null ? '' : String(v))
-                            .replace(/&/g, '&amp;')
-                            .replace(/</g, '&lt;')
-                            .replace(/>/g, '&gt;');
-
-                        let html = '';
-                        html += '<div style="font-size:18px;font-weight:700;margin:0 0 4px 0;">資產盤點清單</div>';
-                        html += '<div style="margin:0 0 2px 0;font-size:11px;">分類目錄：' + esc(category.name || '') + '</div>';
-
-                        const now = new Date();
-                        const ts = now.getFullYear() + '/' +
-                                   String(now.getMonth() + 1).padStart(2,'0') + '/' +
-                                   String(now.getDate()).padStart(2,'0') + ' ' +
-                                   String(now.getHours()).padStart(2,'0') + ':' +
-                                   String(now.getMinutes()).padStart(2,'0');
-                        html += '<div style="margin:0 0 8px 0;font-size:10px;color:#6b7280;">匯出日期：' + ts + '</div>';
-
-                        // 表格外框
-                        html += '<table style="width:100%;border-collapse:collapse;font-size:10px;table-layout:fixed;">';
-                        html += '<thead><tr style="background:#e5e7eb;">'
-                             + '<th style="border:1px solid #9ca3af;padding:4px;width:5%;">#</th>'
-                             + '<th style="border:1px solid #9ca3af;padding:4px;width:30%;">照片記錄</th>'
-                             + '<th style="border:1px solid #9ca3af;padding:4px;width:30%;">資產詳細資訊</th>'
-                             + '<th style="border:1px solid #9ca3af;padding:4px;width:15%;">位置</th>'
-                             + '<th style="border:1px固#9ca3af;padding:4px;width:20%;">備註</th>'
-                             + '</tr></thead><tbody>';
-
-                        rows.forEach((a, idx) => {
-                            const sn = esc(a.serialNumber || a.serial || 'N/A');
-                            const code = esc(a.assetId || a.code || '');
-                            const name = esc(a.name || '');
-                            const loc = esc(a.location || '');
-                            const note = esc(a.note || a.remark || '');
-
-                            // 照片欄：多張照片垂直排列
-                            let photosHtml = '';
-                            if (Array.isArray(a.photos) && a.photos.length) {
-                                a.photos.forEach((src) => {
-                                    if (!src) return;
-                                    photosHtml += '<div style="margin-bottom:4px;border:1px solid #e5e7eb;">'
-                                                + '<img src="' + src + '" style="width:60mm;max-height:35mm;object-fit:contain;display:block;" />'
-                                                + '</div>';
-                                });
-                            }
-
-                            // 詳細資訊欄
-                            let detailHtml = '';
-                            detailHtml += '編號：' + code + '<br>';
-                            detailHtml += 'S/N：' + sn + '<br>';
-                            detailHtml += '名稱：' + name;
-
-                            html += '<tr style="page-break-inside: avoid;">'
-                                 + '<td style="border:1px solid #d1d5db;padding:4px;vertical-align:top;text-align:center;">' + (idx + 1) + '</td>'
-                                 + '<td style="border:1px solid #d1d5db;padding:4px;vertical-align:top;">' + photosHtml + '</td>'
-                                 + '<td style="border:1px固#d1d5db;padding:4px;vertical-align:top;">' + detailHtml + '</td>'
-                                 + '<td style="border:1px solid #d1d5db;padding:4px;vertical-align:top;">' + loc + '</td>'
-                                 + '<td style="border:1px solid #d1d5db;padding:4px;vertical-align:top;">' + note + '</td>'
-                                 + '</tr>';
-                        });
-
-                        html += '</tbody></table>';
-
-                        // 頁尾
-                        html += '<div style="margin-top:8px;font-size:9px;color:#6b7280;display:flex;justify-content:space-between;">'
-                             + '<span>Generated by AssetGuard</span>'
-                             + '<span>本頁共計：' + rows.length + ' 筆資產</span>'
-                             + '</div>';
-
-                        wrapper.innerHTML = html;
+                        wrapper.id = 'pdf-temp-wrapper';
+                        wrapper.style.position = 'fixed';
+                        wrapper.style.inset = '0';
+                        wrapper.style.opacity = '0';
+                        wrapper.style.pointerEvents = 'none';
+                        wrapper.style.zIndex = '-1';
+                        
+                        wrapper.innerHTML = `
+                            <div id="pdf-report-content" style="width:210mm; padding:15mm; box-sizing:border-box; background:#ffffff; color:#111827; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+                                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid #111827;">
+                                    <div>
+                                        <div style="font-size:24px; font-weight:800; letter-spacing:1px;">資產盤點清單</div>
+                                        <div style="font-size:12px; color:#4b5563; margin-top:4px;">
+                                            分類目錄：<span style="font-weight:600; color:#111827;">${escapeHtml(category.name || '')}</span>
+                                        </div>
+                                    </div>
+                                    <div style="text-align:right; font-size:11px; color:#6b7280;">
+                                        <div>匯出日期：${new Date().toLocaleString('zh-TW')}</div>
+                                        <div>資產數量：${assets.length}</div>
+                                    </div>
+                                </div>
+                                <table style="width:100%; border-collapse:collapse; table-layout:fixed; font-size:12px;">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:40px; padding:6px 8px; text-align:center; border-bottom:2px solid #111827; font-size:11px;">序</th>
+                                            <th style="width:250px; padding:6px 8px; text-align:center; border-bottom:2px solid #111827; font-size:11px;">照片記錄</th>
+                                            <th style="padding:6px 8px; text-align:left; border-bottom:2px solid #111827; font-size:11px;">資產詳細資訊</th>
+                                            <th style="width:100px; padding:6px 8px; text-align:left; border-bottom:2px solid #111827; font-size:11px;">位置</th>
+                                            <th style="width:110px; padding:6px 8px; text-align:left; border-bottom:2px solid #111827; font-size:11px;">備註</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${rowsHtml}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                        
                         document.body.appendChild(wrapper);
-
+                        
+                        const element = document.getElementById('pdf-report-content');
+                        if (!element) {
+                            document.body.removeChild(wrapper);
+                            this.isPdfGenerating = false;
+                            alert('建立 PDF 內容時發生錯誤');
+                            return;
+                        }
+                        
                         const opt = {
                             margin: 0,
-                            filename: (category.name || 'AssetReport') + '_AssetReport.pdf',
+                            filename: `${(category.name || 'Asset')}_AssetReport.pdf`,
                             image: { type: 'jpeg', quality: 0.98 },
                             html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
                             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                         };
-
-                        // 直接用 html2pdf 以 wrapper 為來源產生 PDF
-                        html2pdf().set(opt).from(wrapper).save().then(() => {
-                            document.body.removeChild(wrapper);
-                        }).catch(e => {
-                            console.error('匯出失敗', e);
-                            document.body.removeChild(wrapper);
-                            alert('匯出失敗');
-                        });
+                        
+                        // @ts-ignore
+                        await html2pdf().set(opt).from(element).save();
+                        
+                        document.body.removeChild(wrapper);
+                        this.isPdfGenerating = false;
                     } catch (e) {
-                        console.error('匯出 PDF 發生錯誤', e);
-                        alert('匯出失敗');
+                        console.error(e);
+                        this.isPdfGenerating = false;
+                        alert('匯出失敗，請稍後再試');
                     }
                 }
             }
         }).mount('#app');
     </script>
-<script type="module" src="/index.tsx"></script>
 
     <script>
     if ('serviceWorker' in navigator) {
