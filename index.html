@@ -322,6 +322,21 @@
 
             <!-- Content -->
             <div class="flex-1 overflow-y-auto p-4">
+                <!-- 手動安裝 PWA 按鈕區塊 -->
+                <div class="mb-4 p-3 rounded-lg border border-dashed border-blue-300 bg-blue-50/60 flex items-center justify-between">
+                    <div class="mr-3 text-sm text-blue-800">
+                        <div class="font-semibold mb-0.5">安裝 AssetGuard 到裝置</div>
+                        <div class="text-xs text-blue-700/80">
+                            若未看到瀏覽器內建的安裝提示，可點此手動呼叫安裝。
+                        </div>
+                    </div>
+                    <button
+                        @click="manualInstallPWA"
+                        class="px-3 py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 active:scale-95">
+                        手動安裝
+                    </button>
+                </div>
+
                 <div class="flex gap-2 mb-4">
                     <input type="text" v-model="newSettingItem" @keyup.enter="addSettingItem" 
                            :placeholder="settingsTabName"
@@ -443,7 +458,18 @@
     <script type="module">
         const { createApp } = Vue;
 
-        
+        // PWA 安裝提示事件儲存
+        let deferredInstallPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (event) => {
+            event.preventDefault();
+            deferredInstallPrompt = event;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredInstallPrompt = null;
+        });
+
         // --- Database Service ---
         const DB_NAME = 'AssetGuardDB';
         const DB_VERSION = 1;
@@ -720,6 +746,30 @@
                     if (this.settingsTab === 'locations') this.settings.savedLocations.splice(idx, 1);
                     if (this.settingsTab === 'prefixes') this.settings.savedPrefixes.splice(idx, 1);
                     this.saveSettings();
+                },
+
+                // 手動觸發 PWA 安裝
+                async manualInstallPWA() {
+                    try {
+                        if (deferredInstallPrompt) {
+                            deferredInstallPrompt.prompt();
+                            const choiceResult = await deferredInstallPrompt.userChoice;
+                            if (choiceResult && choiceResult.outcome === 'accepted') {
+                                deferredInstallPrompt = null;
+                            }
+                        } else {
+                            alert(
+                                '目前瀏覽器尚未提供安裝提示。\n\n' +
+                                '請確認：\n' +
+                                '1. 已以 HTTPS 開啟此頁面\n' +
+                                '2. 使用支援 PWA 的瀏覽器\n\n' +
+                                '也可以從瀏覽器選單中尋找「安裝 App」或「加入主畫面」。'
+                            );
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        alert('觸發安裝流程時發生錯誤，請稍後再試。');
+                    }
                 },
 
                 // 專案目錄匯出 / 匯入
